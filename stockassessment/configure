@@ -617,6 +617,7 @@ PACKAGE_URL=''
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+PRECOMPILE
 HEADERONLY
 DBG
 CXX14PICFLAGS
@@ -664,6 +665,7 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_debug
+enable_analyze
 enable_compileunits
 '
       ac_precious_vars='build_alias
@@ -1289,6 +1291,8 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-debug          Add debug flags. Note: flags set in a personal
                           Makevars file have precedence
+  --enable-analyze        Add static analyzer flags. Note: flags set in a
+                          personal Makevars file have precedence
   --disable-compileunits  Compile with header only library instead of using
                           compilation units.
 
@@ -1756,6 +1760,22 @@ else $as_nop
 fi
 
 
+# Check whether --enable-analyze was given.
+if test ${enable_analyze+y}
+then :
+  enableval=$enable_analyze; if test $enableval = "no"
+then :
+  ANALYZE=""
+else $as_nop
+  ANALYZE="-fsanitize=address,undefined,leak,shadow-call-stack,pointer-subtract,pointer-compare -fno-sanitize-recover=all -fanalyzer -Wanalyzer-double-fclose -Wanalyzer-double-free -Wanalyzer-exposure-through-output-file -Wanalyzer-file-leak -Wanalyzer-free-of-non-heap -Wanalyzer-malloc-leak -Wanalyzer-mismatching-deallocation -Wanalyzer-null-argument -Wanalyzer-null-dereference -Wanalyzer-possible-null-argument -Wanalyzer-possible-null-dereference -Wanalyzer-shift-count-negative -Wanalyzer-shift-count-overflow -Wanalyzer-stale-setjmp-buffer -Wanalyzer-tainted-array-index -Wanalyzer-too-complex -Wanalyzer-unsafe-call-within-signal-handler -Wanalyzer-use-after-free -Wanalyzer-use-of-pointer-in-stale-stack-frame -Wanalyzer-write-to-const -Wanalyzer-write-to-string-literal"
+fi; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Analyzer flags: ${ANALYZE}" >&5
+printf "%s\n" "$as_me: Analyzer flags: ${ANALYZE}" >&6;}
+else $as_nop
+  DBG=""
+fi
+
+
+
 # Check whether --enable-compileunits was given.
 if test ${enable_compileunits+y}
 then :
@@ -1770,6 +1790,7 @@ else $as_nop
 fi
 
 
+
 if test ${HEADERONLY} = "yes"
 then :
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Compiling using header only library" >&5
@@ -1777,6 +1798,28 @@ printf "%s\n" "$as_me: Compiling using header only library" >&6;}
 else $as_nop
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Compiling using compilation units" >&5
 printf "%s\n" "$as_me: Compiling using compilation units" >&6;}
+fi
+
+
+: ${R_HOME=`R RHOME`}
+if test -z "${R_HOME}"; then
+  echo "could not determine R_HOME"
+  exit 1
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: ${R_HOME}" >&5
+printf "%s\n" "$as_me: ${R_HOME}" >&6;}
+PRECOMPILE=`${R_HOME}/bin/Rscript -e "v<-if(file.size(system.file('include/precompile.hpp',package='TMB'))>0){cat('-DTMB_ALREADY_PRECOMPILED')}else{cat('')}"`
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: ${PRECOMPILE}" >&5
+printf "%s\n" "$as_me: ${PRECOMPILE}" >&6;}
+
+if test -z "${PRECOMPILE}"
+then :
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: TMB pre-compilation not found" >&5
+printf "%s\n" "$as_me: TMB pre-compilation not found" >&6;}
+else $as_nop
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Using TMB pre-compilation" >&5
+printf "%s\n" "$as_me: Using TMB pre-compilation" >&6;}
 fi
 
 
