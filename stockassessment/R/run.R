@@ -325,6 +325,11 @@ clean.void.catches<-function(dat, conf){
 ##' @importFrom stats rnorm
 ##' @export
 jit <- function(fit, nojit=10, par=defpar(fit$data, fit$conf), sd=.25, ncores=detectCores()){
+  if (length(ncores) == 0 || is.na(ncores[1]) || !is.finite(ncores[1]) || ncores[1] < 1) {
+    ncores <- 1L
+  } else {
+    ncores <- as.integer(ncores[1])
+  }
   parv <- unlist(par)
   pars <- lapply(1:nojit, function(i)relist(parv+rnorm(length(parv),sd=sd), par))
   if(ncores>1){

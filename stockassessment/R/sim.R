@@ -5,6 +5,11 @@
 ##' @importFrom parallel detectCores makeCluster parLapply stopCluster clusterEvalQ
 ##' @export
 simstudy <- function(fit, nsim, ncores = detectCores()){
+  if (length(ncores) == 0 || is.na(ncores[1]) || !is.finite(ncores[1]) || ncores[1] < 1) {
+    ncores <- 1L
+  } else {
+    ncores <- as.integer(ncores[1])
+  }
   simdata <- simulate(fit, nsim=nsim,  full.data=TRUE)
   if(ncores>1){
     cl <- makeCluster(ncores) #set up nodes

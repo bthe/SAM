@@ -141,6 +141,11 @@ retro <- function(fit, year=NULL, ncores=detectCores(), ...){
 ##' @importFrom parallel detectCores makeCluster clusterExport parLapply stopCluster clusterEvalQ
 ##' @export
 retro.sam <- function(fit, year=NULL, ncores=detectCores(), ...){
+  if (length(ncores) == 0 || is.na(ncores[1]) || !is.finite(ncores[1]) || ncores[1] < 1) {
+    ncores <- 1L
+  } else {
+    ncores <- as.integer(ncores[1])
+  }
   data <- fit$data
   y <- fit$data$aux[,"year"]
   f <- fit$data$aux[,"fleet"]
@@ -188,6 +193,11 @@ retro.sam <- function(fit, year=NULL, ncores=detectCores(), ...){
 ##' @importFrom parallel detectCores makeCluster clusterExport parLapply stopCluster clusterEvalQ
 ##' @export
 leaveout <- function(fit, fleet=as.list(2:fit$data$noFleets), ncores=detectCores(), ...){
+  if (length(ncores) == 0 || is.na(ncores[1]) || !is.finite(ncores[1]) || ncores[1] < 1) {
+    ncores <- 1L
+  } else {
+    ncores <- as.integer(ncores[1])
+  }
   if(ncores>1){
     cl <- makeCluster(ncores) #set up nodes
     on.exit(stopCluster(cl)) #shut it down
