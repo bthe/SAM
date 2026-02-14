@@ -62,6 +62,7 @@ get_timeout_bin <- function() {
 }
 
 run_one <- function(case_dir, cfg, timeout_bin) {
+  case_dir <- normalizePath(case_dir, winslash = "/", mustWork = TRUE)
   case_name <- basename(case_dir)
   ignore_file <- file.path(case_dir, "ignore")
   exp_file <- file.path(case_dir, "res.EXP")
