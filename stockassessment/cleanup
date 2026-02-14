@@ -1,3 +1,1 @@
-#!/bin/sh
-
-rm -rf config.log config.status src/Makevars autom4te.cache src/SAM.h src/A_*.cpp src/A_*.h src/*.o src/*.so
+rm -f src/Makevars src/*.o src/*.so src/*.d src/*.tmp src/*.o.tmp

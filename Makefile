@@ -80,7 +80,7 @@ quick-install-debug: $(CPP_SRC) $(PACKAGE)/configure $(R_FILES)
 
 $(PACKAGE)/src/stockassessment.so: $(PACKAGE)/src/stockassessment.cpp $(CPP_SRC) $(PACKAGE)/configure
 	touch $(PACKAGE)/src/stockassessment.cpp
-	cd $(PACKAGE)/src; echo "library(TMB); compile('stockassessment.cpp','-O0 -g', libinit=FALSE)" | $(R) --slave
+	cd $(PACKAGE)/src; echo "library(TMB); compile('stockassessment.cpp','-O0 -g', libinit=FALSE,framework = 'TMBad')" | $(R) --slave
 
 unexport TEXINPUTS
 pdf: $(PACKAGE).pdf

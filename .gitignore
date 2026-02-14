@@ -13,3 +13,4 @@ stockassessment/config.status
 stockassessment/src/Makevars
 stockassessment/src/A_*
 stockassessment/src/SAM.h
+.Rproj.user
