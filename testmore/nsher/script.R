@@ -1,5 +1,4 @@
 library(stockassessment)
-setwd('testmore/nsher')
 cn <- read.ices("cn.dat")
 cw <- read.ices("cw.dat")
 dw <- read.ices("dw.dat")
