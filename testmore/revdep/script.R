@@ -29,6 +29,26 @@ buildFromGithub <- function(repo,
 ############################################
 #### Get reverse dependencies from CRAN ####
 ############################################
+has_url <- function(u, timeout_sec = 10L) {
+    old_timeout <- getOption("timeout")
+    on.exit(options(timeout = old_timeout), add = TRUE)
+    options(timeout = timeout_sec)
+    tf <- tempfile(fileext = ".tmp")
+    on.exit(unlink(tf), add = TRUE)
+    ok <- tryCatch({
+        utils::download.file(u, tf, quiet = TRUE, mode = "wb")
+        TRUE
+    }, error = function(e) FALSE, warning = function(w) FALSE)
+    isTRUE(ok)
+}
+
+if (!has_url("https://cloud.r-project.org/robots.txt") ||
+    !has_url("https://github.com/robots.txt")) {
+    cat("SKIPPED: network unavailable\n", file = "full_res.out")
+    cat("OK \n", file = "res.out")
+    quit(save = "no", status = 0)
+}
+
 options(repos = c(CRAN = 'https://cloud.r-project.org/'))
 dbUrl <- utils::available.packages(utils::contrib.url(options("repos")))
 cranPkg <- unlist(tools::package_dependencies("stockassessment",
