@@ -14,7 +14,7 @@ int yearsPFun(confSet &conf, dataSet<Type> &dat) SOURCE({
   for(int f=0;f<noFleets;f++){
   	if(dat.fleetTypes(f)==6){
       for(int y=0;y<dat.noYears;y++){
-        if(!isNAINT(dat.idx1(f,y))){
+        if(dat.idx1(f,y) >= 0){
           if(dat.years(y)<minYear){
 	  	    minYear = dat.years(y);
 		    break;	
@@ -22,7 +22,7 @@ int yearsPFun(confSet &conf, dataSet<Type> &dat) SOURCE({
 	    }
 	  }
 	  for(int y=0;y<dat.noYears;y++){
-        if(!isNAINT(dat.idx1(f,y))){
+        if(dat.idx1(f,y) >= 0){
           if(dat.years(y)>maxYear){
 	  	    maxYear = dat.years(y);
 	  	  }
@@ -506,5 +506,4 @@ template <class Type>
   
 SAM_SPECIALIZATION(vector<double> disFbarFun(dataSet<double>&, confSet&, array<double>&));
 SAM_SPECIALIZATION(vector<TMBad::ad_aug> disFbarFun(dataSet<TMBad::ad_aug>&, confSet&, array<TMBad::ad_aug>&));
-
 

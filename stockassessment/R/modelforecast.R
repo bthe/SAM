@@ -625,7 +625,11 @@ constraints[is.na(constraints) & !is.na(nextssb)] <- sprintf("SSB=%f",nextssb[is
         attr(simlist, "fit")<-fit
 
         toCI <- function(x, trans = exp){
-            trans(x %*% matrix(c(1,0,1,-2,1,2), nrow = 2, ncol =3))
+            x <- as.matrix(x)
+            est <- x[, 1, drop = FALSE]
+            se <- x[, 2, drop = FALSE]
+            se[!is.finite(se)] <- 0
+            trans(cbind(est, est - 2 * se, est + 2 * se))
         }
 
         indx <- 1:2

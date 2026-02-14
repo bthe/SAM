@@ -11,6 +11,8 @@
 
 \item{discrete}{logical if model contain discrete observations}
 
+\item{subset}{indices of observations to include}
+
 \item{...}{extra arguments for TMB's oneStepPredict}
 }
 \description{

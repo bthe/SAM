@@ -346,9 +346,14 @@ Type nllObs(dataSet<Type> &dat, confSet &conf, paraSet<Type> &par, forecastSet<T
       if(par.logitRecapturePhi.size()>0){
 	recapturePhi=invlogit(par.logitRecapturePhi);
 	for(int j=0; j<dat.nobs; ++j){
-	  if(!isNAINT(dat.aux(j,7))){
-	    recapturePhiVec(j)=recapturePhi(dat.aux(j,7)-1);
-	    logitRecapturePhiVec(j) = par.logitRecapturePhi(dat.aux(j,7)-1);
+	  if(dat.aux.cols() > 7 && !isNAINT(dat.aux(j,7))){
+	    int rpIdx = dat.aux(j,7)-1;
+	    if(rpIdx < 0) continue;
+	    if(rpIdx >= recapturePhi.size()){
+	      Rf_error("Recapture phi index out of bounds in nllObs (j=%d rpIdx=%d size=%d).", j, rpIdx, (int)recapturePhi.size());
+	    }
+	    recapturePhiVec(j)=recapturePhi(rpIdx);
+	    logitRecapturePhiVec(j) = par.logitRecapturePhi(rpIdx);
 	  }
 	}
       }
@@ -357,9 +362,13 @@ Type nllObs(dataSet<Type> &dat, confSet &conf, paraSet<Type> &par, forecastSet<T
 	int totalParKey = 0;
 	for(int f=0;f<dat.noFleets;f++){
 	  if(!((dat.fleetTypes(f)==5)||(dat.fleetTypes(f)==3)||(dat.fleetTypes(f)==6))){
-	    if(!isNAINT(dat.idx1(f,y))){
+	    if(dat.idx1(f,y) >= 0){
 	      int idxfrom=dat.idx1(f,y);
 	      int idxlength=dat.idx2(f,y)-dat.idx1(f,y)+1;
+	      if(idxfrom < 0 || idxlength < 1 || (idxfrom + idxlength) > dat.nobs){
+		Rf_error("idx bounds error in nllObs (fleet=%d year=%d idxfrom=%d idxlength=%d nobs=%d).",
+			 f, y, idxfrom, idxlength, dat.nobs);
+	      }
 
 	      // ----------------if sum fleet need to update covariance matrix
 	      if(dat.fleetTypes(f)==7){
@@ -417,10 +426,29 @@ Type nllObs(dataSet<Type> &dat, confSet &conf, paraSet<Type> &par, forecastSet<T
 	      switch(conf.obsLikelihoodFlag(f)){
 	      case 0: // (LN) log-Normal distribution
 		for(int idxV=0; idxV<currentVar.size(); ++idxV){
+		  int obsIdx = idxfrom + idxV;
+		  if(obsIdx < 0 || obsIdx >= dat.nobs){
+		    Rf_error("obs index error in nllObs (fleet=%d year=%d obsIdx=%d nobs=%d).",
+			     f, y, obsIdx, dat.nobs);
+		  }
 		  if(isNA(dat.weight(idxfrom+idxV))){
 		    sqrtW(idxV)=Type(1.0);
 		    int a = dat.aux(idxfrom+idxV,2)-conf.minAge;
-		    if(conf.predVarObsLink(f,a)>(-1)){
+		    if(a < 0 || a >= conf.predVarObsLink.cols() || a >= conf.keyVarObs.cols()){
+		      Rf_error("age index error in nllObs (fleet=%d year=%d ageIdx=%d predVarObsLinkCols=%d keyVarObsCols=%d).",
+			       f, y, a, conf.predVarObsLink.cols(), conf.keyVarObs.cols());
+		    }
+		    if(conf.predVarObsLink(f,a)>(-1) && par.predVarObs.size() > 0){
+		      int pidx = conf.predVarObsLink(f,a);
+		      int vidx = conf.keyVarObs(f,a);
+		      if(pidx < 0 || pidx >= par.predVarObs.size()){
+			Rf_error("predVarObs index error in nllObs (fleet=%d year=%d pidx=%d size=%d).",
+				 f, y, pidx, (int)par.predVarObs.size());
+		      }
+		      if(vidx < 0 || vidx >= par.logSdLogObs.size()){
+			Rf_error("keyVarObs index error in nllObs (fleet=%d year=%d vidx=%d size=%d).",
+				 f, y, vidx, (int)par.logSdLogObs.size());
+		      }
 		      sqrtW(idxV) = sqrt(obs_fun::findLinkV(par.logSdLogObs(conf.keyVarObs(f,a))+(exp(par.predVarObs(conf.predVarObsLink(f,a))) -Type(1))*predObs(idxfrom+idxV),0)/currentVar(idxV));
 		    }
 		    for(int idxXtraSd=0; idxXtraSd<(conf.keyXtraSd).rows(); ++idxXtraSd){
@@ -441,7 +469,7 @@ Type nllObs(dataSet<Type> &dat, confSet &conf, paraSet<Type> &par, forecastSet<T
 		    }
 		  }
 		}
-		if(isNAINT(dat.idxCor(f,y))){
+		if(dat.idxCor(f,y) < 0 || isNAINT(dat.idxCor(f,y))){
 		  nll += nllVec(f)((dat.logobs.segment(idxfrom,idxlength)-predObs.segment(idxfrom,idxlength))/sqrtW,keep.segment(idxfrom,idxlength));
 		  nll += (log(sqrtW)*keep.segment(idxfrom,idxlength)).sum();
 		  SIMULATE_F(of){
@@ -449,6 +477,10 @@ Type nllObs(dataSet<Type> &dat, confSet &conf, paraSet<Type> &par, forecastSet<T
 		  }
 		}else{
 		  int thisdim=currentVar.size();
+		  if(dat.idxCor(f,y) < 0 || dat.idxCor(f,y) >= dat.corList.size()){
+		    Rf_error("idxCor index error in nllObs (fleet=%d year=%d idxCor=%d corListSize=%d).",
+			     f, y, dat.idxCor(f,y), (int)dat.corList.size());
+		  }
 		  matrix<Type> thiscor=dat.corList(dat.idxCor(f,y));
 		  matrix<Type> thiscov(thisdim,thisdim);
 		  for(int r=0;r<thisdim;++r){
@@ -489,7 +521,7 @@ Type nllObs(dataSet<Type> &dat, confSet &conf, paraSet<Type> &par, forecastSet<T
 	      }
 	    }
 	  }else if(dat.fleetTypes(f)==5){
-	    if(!isNAINT(dat.idx1(f,y))){    
+	    if(dat.idx1(f,y) >= 0){    
 	      for(int i=dat.idx1(f,y); i<=dat.idx2(f,y); ++i){
 		//nll += -keep(i)*dnbinom(dat.logobs(i),predObs(i)*recapturePhiVec(i)/(Type(1.0)-recapturePhiVec(i)),recapturePhiVec(i),true);
 		Type log_mu = log(predObs(i));
@@ -502,7 +534,7 @@ Type nllObs(dataSet<Type> &dat, confSet &conf, paraSet<Type> &par, forecastSet<T
 	    }
 	  }else if(dat.fleetTypes(f)==3||(dat.fleetTypes(f)==6)){
 	    Type sd=0;
-	    if(!isNAINT(dat.idx1(f,y))){
+	    if(dat.idx1(f,y) >= 0){
 	      for(int i=dat.idx1(f,y); i<=dat.idx2(f,y); ++i){
 		if(conf.keyBiomassTreat(f)==3){
 		  sd = sqrt(varLogCatch(y));

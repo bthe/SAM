@@ -230,8 +230,13 @@ vector<Type> predObsFun(dataSet<Type> &dat, confSet &conf, paraSet<Type> &par, a
     if(par.logitReleaseSurvival.size()>0){
       releaseSurvival=invlogit(par.logitReleaseSurvival);
       for(int j=0; j<dat.nobs; ++j){
-	if(!isNAINT(dat.aux(j,7))){
-	  releaseSurvivalVec(j)=releaseSurvival(dat.aux(j,7)-1);
+	if(dat.aux.cols() > 7 && !isNAINT(dat.aux(j,7))){
+	  int rsIdx = dat.aux(j,7)-1;
+	  if(rsIdx < 0) continue;
+	  if(rsIdx >= releaseSurvival.size()){
+	    Rf_error("Release survival index out of bounds in predObsFun (j=%d rsIdx=%d size=%d).", j, rsIdx, (int)releaseSurvival.size());
+	  }
+	  releaseSurvivalVec(j)=releaseSurvival(rsIdx);
 	}
       }
     }

@@ -63,6 +63,20 @@ sam.fit <- function(data, conf, parameters, newtonsteps=3, rm.unidentified=FALSE
         parameters<-definit
     }
     data<-clean.void.catches(data,conf)
+    # Use -1 as missing sentinel for integer index arrays passed to TMB.
+    # NA in integer arrays may be converted to 0 during marshaling.
+    if(!is.null(data$idx1)){
+        data$idx1[is.na(data$idx1)] <- -1L
+        storage.mode(data$idx1) <- "integer"
+    }
+    if(!is.null(data$idx2)){
+        data$idx2[is.na(data$idx2)] <- -1L
+        storage.mode(data$idx2) <- "integer"
+    }
+    if(!is.null(data$idxCor)){
+        data$idxCor[is.na(data$idxCor)] <- -1L
+        storage.mode(data$idxCor) <- "integer"
+    }
     
     confTmp = defcon(data)
     for(i in 1:length(confTmp)){
